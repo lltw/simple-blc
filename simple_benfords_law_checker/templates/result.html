@@ -1,0 +1,11 @@
+{% extends 'index.html' %}
+
+{% block filestatus %}
+<a href="{{ url_for('upload_file') }}">Upload another file</a>
+{% endblock %}
+
+{% block result %}
+<img src='data:image/png;base64,{{ freq_dist_plot }}'/>
+{% endblock %}
+
+
