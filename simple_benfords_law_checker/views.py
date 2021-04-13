@@ -1,4 +1,5 @@
-from simple_benfords_law_checker import app
+from simple_benfords_law_checker import app, user_submitted_data
+
 import os
 from flask import flash, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
@@ -111,4 +112,14 @@ def show_results(file_id: str):
 
     # Embed the result in the html output
     freq_dist_plot = base64.b64encode(buf.getbuffer()).decode('ascii')
+
     return render_template('result.html', freq_dist_plot=freq_dist_plot)
+
+
+@app.route('/db-test')
+def db_test():
+
+    wild_humans = user_submitted_data.find_one({"type": "wild"})
+    text = f"Wild humans are: {wild_humans}"
+
+    return render_template('db-test.html', text=text)

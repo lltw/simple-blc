@@ -7,13 +7,11 @@ This is a very first draft. The app has limited functionality - for now it only 
 
 ## Getting Started
 
-In order to tun the app you need to build a Docker image
+Prerequisites: docker-compose (https://docs.docker.com/compose/install/) (to run docker-compose.yml)
+
+In order to tun the app you need to, clone the repository, run the following command from the top directory of cloned repository:
 ```
-docker build --tag simple-blc .
-```
-run it
-```
-docker run --publish 5000:5000 simple-blc
+docker-compose up
 ```
 
 and open http://127.0.0.1:5000/ in your browser.
@@ -43,8 +41,6 @@ Let's check whether the distance of the 300 brightest stars from Earth (in light
 If you are curious what else to check, the 11th column - The Hipparcos parallax of the star - is a good pick. 
 For more info go to http://www.atlasoftheuniverse.com/stars.html or see the info file:
  + https://github.com/lltw/simple-blc/blob/main/tests/test_flat_files/300_brightest_stars.info
-
-
 
 
 
