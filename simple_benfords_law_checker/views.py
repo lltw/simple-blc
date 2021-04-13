@@ -1,4 +1,4 @@
-from simple_benfords_law_checker import app, user_submitted_data
+from simple_benfords_law_checker import app
 
 import os
 from flask import flash, render_template, request, redirect, url_for
