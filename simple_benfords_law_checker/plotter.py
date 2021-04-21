@@ -1,8 +1,9 @@
 import os
+import uuid
 import numpy as np
 from matplotlib.figure import Figure
 import matplotlib.axes._axes as axes  # code completion aid
-from simple_benfords_law_checker import app
+from simple_benfords_law_checker.models import CurrentUserFile
 
 
 def get_benfords_freq_dist():
@@ -32,15 +33,12 @@ def get_emp_freq_distribution(data):
     return emp_freq_dist
 
 
-def get_freq_dist_plot(file_id: str) -> Figure:
+def get_freq_dist_plot(file_id: uuid) -> Figure:
 
-    file_dir = os.path.join(app.config['UPLOAD_DIR'], file_id)
-    user_col_path = os.path.join(file_dir, app.config['USER_COL'])
+    current_user_file = CurrentUserFile.get_by_file_id(file_id)
+    data_column = current_user_file.data_column
 
-    with open(user_col_path, 'r') as user_col_file:
-        data_str = user_col_file.readlines()[0].strip()
-
-    data = [get_first_significant_digit(float(x)) for x in data_str.split(',')]
+    data = [get_first_significant_digit(float(x)) for x in data_column]
 
     labels = [str(i) for i in range(1, 10)]
 

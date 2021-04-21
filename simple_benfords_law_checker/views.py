@@ -1,53 +1,22 @@
-from simple_benfords_law_checker import app
-
 import os
+import uuid
+
 from flask import flash, render_template, request, redirect, url_for
 from werkzeug.utils import secure_filename
+from simple_benfords_law_checker import app
+
+from simple_benfords_law_checker.parser import (is_upload_file_html_form_ok,
+                                                parse_upload_file_html_form,
+                                                is_column_in_range,
+                                                save_current_user_file,
+                                                parse_user_submitted_file)
+
+from simple_benfords_law_checker.models import CurrentUserFile
 
 
 @app.route('/')
 def index():
     return render_template('index.html')
-
-
-def allowed_file(filename):
-
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
-
-def is_upload_file_html_form_ok(file, filename, column, delimiter, is_header) -> bool:
-    """Check if all the fields of 'Upload File' HTML form are correctly filled,
-     generate error if not."""
-
-    is_form_ok = False
-    error_messages = []
-
-    if not file:
-        error_messages.append('No file selected.')
-    else:
-        if not allowed_file(filename):
-            error_messages.append('Invalid file extension. Valid extensions are: ' +
-                                  ', '.join(app.config['ALLOWED_EXTENSIONS']))
-
-        # TODO: check if number of column is convertible to an integer
-        #       greater than 1
-        if not column:
-            error_messages.append('No column specified.')
-
-        if not delimiter:
-            error_messages.append('No delimiter specified.')
-
-        if not is_header:
-            error_messages.append('No header information provided.')
-
-    if not error_messages:
-        is_form_ok = True
-    else:
-        for em in error_messages:
-            flash(em)
-
-    return is_form_ok
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -68,28 +37,25 @@ def upload_file():
 
             if is_upload_file_html_form_ok(file, filename, column, delimiter, is_header):
 
-                # Generate file ID and create file dir in upload dir
-                # TODO: change the user file ID generation system to something less naive
-                #       and put it into more appropriate place
-                from numpy import random
-                file_id = str(random.randint(1, 99999))
+                # Parse user 'Upload File' HTML form
+                column, delimiter, is_header = parse_upload_file_html_form(column, delimiter, is_header)
 
-                # Save file to UPLOAD_DIR/file_id/
-                file_dir = os.path.join(app.config['UPLOAD_DIR'], file_id)
-                os.makedirs(file_dir)
-                file_path = os.path.join(file_dir, filename)
-                file.save(file_path)
+                if is_column_in_range(file, column, delimiter, is_header):
 
-                # Parse the file
-                column = int(column) - 1
-                delimiter = app.config['ALLOWED_DELIMITERS'][delimiter]
-                is_header = True if is_header == 'yes' else False
+                    # Generate id for user submitted file. Save user submitted file to UPLOAD_DIR/file_id/
+                    file_id: uuid = save_current_user_file(file, filename)
 
-                from . import parser
-                parser.parse_user_provided_data(file_dir, file_id, filename,
-                                                column, delimiter, is_header)
+                    # Parse user submitted file
+                    current_user_file = parse_user_submitted_file(file_id,
+                                                                  filename,
+                                                                  column,
+                                                                  delimiter,
+                                                                  is_header)    # type: CurrentUserFile
 
-                return redirect(url_for('show_results', file_id=file_id))
+                    # Save current_user_file to current_user_files database
+                    current_user_file.save()
+
+                    return redirect(url_for('show_results', file_id=file_id))
 
             return render_template('index.html')
 
@@ -97,7 +63,7 @@ def upload_file():
 
 
 @app.route('/<file_id>/result', methods=['GET', 'POST'])
-def show_results(file_id: str):
+def show_results(file_id: uuid):
 
     # Generate the figure
     from . import plotter
@@ -113,13 +79,16 @@ def show_results(file_id: str):
     # Embed the result in the html output
     freq_dist_plot = base64.b64encode(buf.getbuffer()).decode('ascii')
 
+
     return render_template('result.html', freq_dist_plot=freq_dist_plot)
 
 
 @app.route('/db-test')
 def db_test():
+    from . import user_submitted_data
 
     wild_humans = user_submitted_data.find_one({"type": "wild"})
     text = f"Wild humans are: {wild_humans}"
+
 
     return render_template('db-test.html', text=text)

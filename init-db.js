@@ -1,6 +1,8 @@
 db = db.getSiblingDB("test_mongodb");
 
 db.user_submitted_data.drop();
+db.current_user_files.drop();
+
 
 db.user_submitted_data.insertMany([
     {
