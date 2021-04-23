@@ -1,6 +1,11 @@
 from mongoengine import *
 
 
+class ChiSquaredTest(EmbeddedDocument):
+    chi_2_statistic = FloatField(required=True)
+    chi_2_p_value = FloatField(required=True)
+
+
 class CurrentUserFile(Document):
 
     file_id = UUIDField(required=True, primary_key=True)
@@ -13,6 +18,7 @@ class CurrentUserFile(Document):
     no_val_err = IntField(required=True)
     ncol_err_rows_nums = ListField(IntField(), default=list)
     val_err_rows_nums = ListField(IntField(), default=list)
+
 
     @classmethod
     def get_by_file_id(cls, file_id):

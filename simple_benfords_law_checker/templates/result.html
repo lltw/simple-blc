@@ -4,8 +4,14 @@
 <button><a href="{{ url_for('upload_file') }}">Upload another file</a></button>
 {% endblock %}
 
-{% block result %}
-<img src='data:image/png;base64,{{ freq_dist_plot }}'/>
+{% block plot %}
+<img src='data:image/png;base64,{{ freq_dist_plot }}'/><br><br>
 {% endblock %}
 
 
+{% block result %}
+<text> Chi-squared Goodness of Fit Test: </text><br>
+<text> ------------------------------------------------------ </text><br>
+<text> Chi-squared statistic: {{ chi_2_statistic }}</text><br>
+<text> p-value: {{ chi_2_p_value }}</text><br>
+{% endblock %}

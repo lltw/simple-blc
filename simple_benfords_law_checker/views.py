@@ -62,6 +62,8 @@ def upload_file():
     return render_template('index.html')
 
 
+
+
 @app.route('/<file_id>/result', methods=['GET', 'POST'])
 def show_results(file_id: uuid):
 
@@ -70,7 +72,14 @@ def show_results(file_id: uuid):
     from io import BytesIO
     import base64
 
+    from simple_benfords_law_checker.benfords_stats import chisquare_gof_benfords_law_test
+
     fig = plotter.get_freq_dist_plot(file_id)
+
+    current_user_file = CurrentUserFile.get_by_file_id(file_id)
+    numbers = current_user_file.data_column
+
+    chi_2_statistic, chi_2_p_value = chisquare_gof_benfords_law_test(numbers)
 
     # Save it to a temporary buffer
     buf = BytesIO()
@@ -79,8 +88,10 @@ def show_results(file_id: uuid):
     # Embed the result in the html output
     freq_dist_plot = base64.b64encode(buf.getbuffer()).decode('ascii')
 
-
-    return render_template('result.html', freq_dist_plot=freq_dist_plot)
+    return render_template('result.html',
+                           freq_dist_plot=freq_dist_plot,
+                           chi_2_statistic=chi_2_statistic,
+                           chi_2_p_value=chi_2_p_value)
 
 
 @app.route('/db-test')

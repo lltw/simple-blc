@@ -1,15 +1,16 @@
-import os
 import uuid
+
+import matplotlib.axes._axes as axes  # code completion aid
 import numpy as np
 from matplotlib.figure import Figure
-import matplotlib.axes._axes as axes  # code completion aid
+
 from simple_benfords_law_checker.models import CurrentUserFile
 
 
 def get_benfords_freq_dist():
     freq_dist = np.zeros(9)
     for d in range(1, 10):
-        freq_dist[d-1] = np.log10(1 + (d)**(-1))
+        freq_dist[d - 1] = np.log10(1 + (d) ** (-1))
     return freq_dist
 
 
@@ -21,7 +22,6 @@ def get_first_significant_digit(number):
 
 
 def get_emp_freq_distribution(data):
-
     n = len(data)
     emp_freq_dist = np.zeros(9)
 
@@ -34,7 +34,6 @@ def get_emp_freq_distribution(data):
 
 
 def get_freq_dist_plot(file_id: uuid) -> Figure:
-
     current_user_file = CurrentUserFile.get_by_file_id(file_id)
     data_column = current_user_file.data_column
 
@@ -62,5 +61,3 @@ def get_freq_dist_plot(file_id: uuid) -> Figure:
     fig.tight_layout()
 
     return fig
-
-
