@@ -1,9 +1,9 @@
 import os
 import uuid
 
-from flask import flash, render_template, request, redirect, url_for
+from flask import flash, render_template, jsonify, request, redirect, url_for, Blueprint
 from werkzeug.utils import secure_filename
-from simple_benfords_law_checker import app
+from flask import current_app as app
 
 from simple_benfords_law_checker.parser import (is_upload_file_html_form_ok,
                                                 parse_upload_file_html_form,
@@ -12,6 +12,15 @@ from simple_benfords_law_checker.parser import (is_upload_file_html_form_ok,
                                                 parse_user_submitted_file)
 
 from simple_benfords_law_checker.models import CurrentUserFile
+
+
+# Blueprint Configuration
+api_bp = Blueprint(
+    'api_bp', __name__,
+    template_folder='templates',
+    static_folder='static',
+    static_url_path='static',
+)
 
 
 @app.route('/')
@@ -38,7 +47,8 @@ def upload_file():
             if is_upload_file_html_form_ok(file, filename, column, delimiter, is_header):
 
                 # Parse user 'Upload File' HTML form
-                column, delimiter, is_header = parse_upload_file_html_form(column, delimiter, is_header)
+                column, delimiter, is_header = parse_upload_file_html_form(
+                    column, delimiter, is_header)
 
                 if is_column_in_range(file, column, delimiter, is_header):
 
@@ -60,8 +70,6 @@ def upload_file():
             return render_template('index.html')
 
     return render_template('index.html')
-
-
 
 
 @app.route('/<file_id>/result', methods=['GET', 'POST'])
@@ -100,6 +108,5 @@ def db_test():
 
     wild_humans = user_submitted_data.find_one({"type": "wild"})
     text = f"Wild humans are: {wild_humans}"
-
 
     return render_template('db-test.html', text=text)

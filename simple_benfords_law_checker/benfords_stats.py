@@ -2,6 +2,8 @@ import numpy as np
 import numpy.typing as npt
 from scipy.stats import chisquare
 
+from typing import Tuple
+
 
 def get_benfords_prob_dist() -> np.ndarray:
     """Calculates probability distribution of first significant digits according to Benford's Law, returns it as a np.ndarray."""
@@ -51,7 +53,7 @@ def get_observed_fsd_frequencies(numbers: npt.ArrayLike) -> np.ndarray:
     return observed_fsd_frequencies
 
 
-def chisquare_gof_benfords_law_test(numbers: npt.ArrayLike) -> (float, float):
+def chisquare_gof_benfords_law_test(numbers: npt.ArrayLike) -> Tuple[float, float]:
     """Performs Chi-squared Goodness of Fit test with Null Hypothesis: numbers follows the Benford's Distribution.
 
     Performs Chi-squared Goodness of Fit test to check if frequencies of first significant digits of provided data
@@ -75,7 +77,7 @@ def chisquare_gof_benfords_law_test(numbers: npt.ArrayLike) -> (float, float):
     return chi_2_statistic, chi_2_p_value
 
 
-def get_orders_of_magnitude(numbers: npt.ArrayLike) -> (int, int):
+def get_orders_of_magnitude(numbers: npt.ArrayLike) -> Tuple[int, int]:
     """Calculates orders of magnitude of the smallest and the largest number in a provided list.
 
     Order of magnitude is defined as log10 of a number, truncated to an integer.

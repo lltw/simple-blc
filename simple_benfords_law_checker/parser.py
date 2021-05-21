@@ -1,19 +1,20 @@
 import csv
 import os
 import uuid
-from typing import List
+from typing import List, Tuple
 
 from flask import flash
 from werkzeug.datastructures import FileStorage
 
-from simple_benfords_law_checker import app
 from simple_benfords_law_checker.models import CurrentUserFile
+from flask import current_app as app
 
 
 def allowed_extension(filename: str) -> bool:
     """Check if user submitted file has and extension that is in ALLOWED_EXTENSIONS list specified in app config."""
     return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+           filename.rsplit('.', 1)[1].lower(
+           ) in app.config['ALLOWED_EXTENSIONS']
 
 
 def allowed_filename_len(filename: str) -> bool:
@@ -64,7 +65,8 @@ def is_upload_file_html_form_ok(file: FileStorage,
         if not column:
             error_messages.append('No column number specified.')
         elif not is_str_an_positive_int(column):
-            error_messages.append('Column number should be an integer equal or greater than 1.')
+            error_messages.append(
+                'Column number should be an integer equal or greater than 1.')
 
         if not delimiter:
             error_messages.append('No delimiter specified.')
@@ -83,7 +85,7 @@ def is_upload_file_html_form_ok(file: FileStorage,
 
 def parse_upload_file_html_form(column: str,
                                 delimiter: str,
-                                is_header: bool) -> (int, str, bool):
+                                is_header: bool) -> Tuple[int, str, bool]:
     """
     Parse the fields of 'Upload File' HTML form.
 
@@ -122,7 +124,8 @@ def is_column_in_range(file: FileStorage, column: int, delimiter: str, is_header
     """
 
     column_in_range: bool = False
-    first_line_len: int = len(file.stream.readline().decode().strip().split(delimiter))
+    first_line_len: int = len(
+        file.stream.readline().decode().strip().split(delimiter))
     file.stream.seek(0)
 
     if column < first_line_len:
@@ -156,10 +159,13 @@ def parse_user_submitted_file(file_id: uuid,
     file_dir = os.path.join(app.config['UPLOAD_DIR'], str(file_id))
     file_path = os.path.join(file_dir, filename)
 
-    data_column: List[float] = []  # a list of values from the column selected by a user
-    ncol_err_rows_nums: List[int] = []  # row numbers of rows in which number of columns deviates from the number
+    # a list of values from the column selected by a user
+    data_column: List[float] = []
+    # row numbers of rows in which number of columns deviates from the number
+    ncol_err_rows_nums: List[int] = []
     # of columns in the header / first row
-    val_err_rows_nums: List[int] = []  # row numbers of rows with values in data column that can't be converted
+    # row numbers of rows with values in data column that can't be converted
+    val_err_rows_nums: List[int] = []
     # to float
 
     with open(file_path, 'r') as user_file:
