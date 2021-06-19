@@ -1,9 +1,12 @@
 import os
+import sys
 import uuid
 
-from flask import flash, render_template, jsonify, request, redirect, url_for, Blueprint
+from flask import flash, render_template, jsonify, send_file, send_from_directory, make_response, request, redirect, url_for, Blueprint
+import mongoengine
 from werkzeug.utils import secure_filename
 from flask import current_app as app
+from werkzeug.wrappers import response
 
 from simple_benfords_law_checker.parser import (is_upload_file_html_form_ok,
                                                 parse_upload_file_html_form,
@@ -28,7 +31,7 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['POST'])
 def upload_file():
 
     if request.method == 'POST':
@@ -110,3 +113,82 @@ def db_test():
     text = f"Wild humans are: {wild_humans}"
 
     return render_template('db-test.html', text=text)
+
+
+@app.route('/test-results-stats', methods=['GET'])
+def test_results_stats():
+
+    chi_2_statistic, chi_2_p_value = 5.941393249642216, 0.6537967552115286
+
+    response_object = {'status': 'succes'}
+    response_object['chiSquaredStatistic'] = chi_2_statistic
+    response_object['chiSquaredPvalue'] = chi_2_p_value
+    return jsonify(response_object)
+
+
+@app.route('/test-results-plot', methods=['GET'])
+def test_results_plot():
+
+    filename = 'static/img/test-plot.png'
+    return send_file(filename, mimetype='image/jpg')
+
+
+@app.route('/test-upload', methods=['GET', 'POST'])
+def test_upload():
+    response_object = {'status': 'success'}
+
+    if request.method == 'POST':
+
+        try:
+            print(request.files['file'], file=sys.stderr)
+        except KeyError as error:
+            print(error)
+
+        print(request.form['columnNumber'], file=sys.stderr)
+        print(request.form['delimiter'], file=sys.stderr)
+        print(request.form['isHeader'], file=sys.stderr)
+
+        return jsonify(response_object)
+
+  #  if 'file' not in request.files:
+
+    #    response_object = {'status': 'failure', 'request': str(request)}
+   #     return jsonify(response_object)
+
+    # if request.files:
+    #    file = request.files['file']
+    #    column = request.form['columnNumber']
+    #    delimiter = request.form['delimiter']
+    #    is_header = request.form['isHeader']
+   #
+    #    filename = secure_filename(file.filename)
+
+     #   response_object = {'status': 'success', 'columnNumber': column,
+      #                      'delimiter': delimiter,
+       #                     'isHeader': is_header,
+        #                    'filename': filename}
+
+        # return jsonify(response_object)
+
+        # Parse user 'Upload File' HTML form
+        # column, delimiter, is_header = parse_upload_file_html_form(
+        #    column, delimiter, is_header)
+
+        # if is_column_in_range(file, column, delimiter, is_header):
+
+        # Generate id for user submitted file. Save user submitted file to UPLOAD_DIR/file_id/
+        #file_id: uuid = save_current_user_file(file, filename)
+
+        # Parse user submitted file
+        # current_user_file = parse_user_submitted_file(file_id,
+        #                                              filename,
+        #                                              column,
+        #                                              delimiter,
+        #                                              is_header)    # type: CurrentUserFile
+
+        # Save current_user_file to current_user_files database
+        # current_user_file.save()
+
+        # return redirect(url_for('show_results', file_id=file_id))
+
+        # return render_template('index.html')

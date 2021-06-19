@@ -1,46 +1,27 @@
 # Simple Benford's Law Checker
 
-This is a simple python-based web application for checking if the numbers in specified column in user submitted file are following the Benford's Law. 
+This is a simple web application consisted of python server (Flask) and Vue client for checking if the numbers in specified column in user submitted file are following the Benford's Law.
 
 # Current state
-This is a very first draft. The app has limited functionality - for now it only draws a bar plot of distribution of first significant digits in user submitted data vs. distribution of fist first significant according to Benford's Law. It doesn't have any automated testing nor config other than development config yet. 
+
+This is a second draft - currently I'm adding Vue client to it.
 
 ## Getting Started
 
-Prerequisites: docker-compose (https://docs.docker.com/compose/install/) (to run docker-compose.yml)
+Prerequisites: docker-compose (to run docker-compose.yml) and npm (to run vue client)
 
 In order to tun the app you need to, clone the repository, run the following command from the top directory of cloned repository:
+
 ```
-docker-compose up
+docker-compose up -d
+docker-compode logs -f
 ```
 
-and open http://127.0.0.1:5000/ in your browser.
+Then open a new terminal and navigate to client directory to run Vue client:
 
-## Examples
+```
+cd client
+npm run serve
+```
 
-### The Brightest Stars
-
-Let's check whether the distance of the 300 brightest stars from Earth (in light years) follows the Beanford's Law.
-
-1. Download the data. 
-   
-   There are TSV and CSV files in the test directory containing relevant data:
-    + https://github.com/lltw/simple-blc/blob/main/tests/test_flat_files/300_brightest_stars.tsv
-    + https://github.com/lltw/simple-blc/blob/main/tests/test_flat_files/300_brightest_stars.csv
-    
-   Download one of them. The source of the data is http://www.atlasoftheuniverse.com/stars.html. 
-   
-2. Run the docker image and go to http://127.0.0.1:5000/ in your browser.
-3. Upload the file:
-   + select the downloaded file
-   + set column number to 13
-   + set delimiter to comma or tab (depending on which file you downloaded)
-   + set the header presence field to 'yes'
-   + click 'Submit'!
-    
-If you are curious what else to check, the 11th column - The Hipparcos parallax of the star - is a good pick. 
-For more info go to http://www.atlasoftheuniverse.com/stars.html or see the info file:
- + https://github.com/lltw/simple-blc/blob/main/tests/test_flat_files/300_brightest_stars.info
-
-
-
+You can now open http://127.0.0.1:8080/ in your browser, to see the page. If you open http://127.0.0.1:5000/ you'll see the old page, still being rendered by the python server.
