@@ -1,9 +1,12 @@
 <template>
-  <h4>Chi-squared Goodness of Fit Test</h4>
+  <h4>Distribution of first significant digits</h4>
   <hr>
-  <p v-if="fileID">Chi-squared statistic: {{ chiSquaredStatistic }}</p>
-  <p v-if="fileID">p-value: {{ chiSquaredPvalue }}</p>
-
+  <img
+    v-if="fileID"
+    class="img-fluid"
+    :src="plotUrl"
+    alt="test plot"
+  />
 </template>
 
 <script>
@@ -15,24 +18,23 @@ export default {
   },
   data() {
     return {
-      chiSquaredStatistic: '',
-      chiSquaredPvalue: ''
+      plotUrl: ''
     };
   },
   watch: {
     fileID: function() {
-      const statsPath = 'http://localhost:5000/chi-squared-results';
+      const plotPath = 'http://localhost:5000/plot';
 
       if (this.fileID) {
         axios
-          .get(statsPath, {
+          .get(plotPath, {
+            responseType: 'blob',
             params: {
               fileID: this.fileID
             }
           })
           .then(res => {
-            this.chiSquaredStatistic = res.data.chiSquaredStatistic;
-            this.chiSquaredPvalue = res.data.chiSquaredPvalue;
+            this.plotUrl = window.URL.createObjectURL(new Blob([res.data]));
           })
           .catch(error => {
             // eslint-disable-next-line
@@ -43,7 +45,6 @@ export default {
   }
 };
 </script>
-
 
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

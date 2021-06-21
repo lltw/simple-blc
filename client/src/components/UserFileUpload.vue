@@ -84,18 +84,31 @@
     </div>
   </form>
 
+  <div
+    class="alert alert-danger"
+    role="alert"
+    v-if="sumbissionError.isSubmissionError"
+  >
+    {{ sumbissionError.errorMessage }}
+  </div>
+
 </template>
 
 <script>
 import axios from 'axios';
 
 export default {
+  emits: ['file-uploaded'],
   data() {
     return {
       file: '',
-      columnNumber: null,
       delimiter: null,
-      isHeader: null
+      isHeader: null,
+      columnNumber: null,
+      sumbissionError: {
+        isSubmissionError: false,
+        errorMessage: ''
+      }
     };
   },
   methods: {
@@ -103,14 +116,17 @@ export default {
       this.file = this.$refs.file.files[0];
     },
     submitFile() {
-      const uploadPath = 'http://localhost:5000/test-upload';
+      this.sumbissionError.isSubmissionError = false;
+      this.sumbissionError.errorMessage = '';
+
+      const uploadPath = 'http://localhost:5000/upload-file';
 
       let formData = new FormData();
 
       formData.append('file', this.file);
-      formData.append('columnNumber', this.columnNumber - 1);
       formData.append('delimiter', this.delimiter);
       formData.append('isHeader', this.isHeader);
+      formData.append('columnNumber', this.columnNumber);
 
       //TODO: validate files
       axios
@@ -121,10 +137,31 @@ export default {
         })
         .then(res => {
           console.log(res);
+
+          let fileID = res.data.fileID;
+          this.$emit('file-uploaded', fileID);
         })
         .catch(error => {
           // eslint-disable-next-line
-          console.error(error);
+          if (error.response) {
+            // The request was made and the server responded with a status code
+            // that falls out of the range of 2xx
+            this.sumbissionError.isSubmissionError = true;
+            if (error.response.data.message) {
+              this.sumbissionError.errorMessage = error.response.data.message;
+            } else {
+              this.sumbissionError.errorMessage = error;
+            }
+          } else if (error.request) {
+            // The request was made but no response was received
+            // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+            // http.ClientRequest in node.js
+            console.log(error.request);
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            console.log('Error', error.message);
+          }
+          console.log(error.config);
         });
     }
   }

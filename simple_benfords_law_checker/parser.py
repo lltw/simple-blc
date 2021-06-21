@@ -1,104 +1,12 @@
 import csv
 import os
 import uuid
-from typing import List, Tuple
+from typing import List
 
-from flask import flash
 from werkzeug.datastructures import FileStorage
 
 from simple_benfords_law_checker.models import CurrentUserFile
 from flask import current_app as app
-
-
-def allowed_extension(filename: str) -> bool:
-    """Check if user submitted file has and extension that is in ALLOWED_EXTENSIONS list specified in app config."""
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower(
-           ) in app.config['ALLOWED_EXTENSIONS']
-
-
-def allowed_filename_len(filename: str) -> bool:
-    """
-    Check if user submitted filename does not exceed MAX_FILENAME_LEN limit specified in app config.
-    """
-    return len(filename) <= app.config['MAX_FILENAME_LEN']
-
-
-def is_str_an_positive_int(x: str) -> bool:
-    """
-    Check if string is convertible to positive integer.
-    """
-    try:
-        float(x)
-    except ValueError:
-        return False
-
-    if float(x).is_integer() and float(x) >= 1:
-        return True
-    else:
-        return False
-
-
-def is_upload_file_html_form_ok(file: FileStorage,
-                                filename: str,
-                                column: str,
-                                delimiter: str,
-                                is_header: bool) -> bool:
-    """
-    Check if all the fields of 'Upload File' HTML form are correctly filled,
-    generate errors if not.
-    """
-
-    is_form_ok: bool = False
-    error_messages: List[str] = []
-
-    if not file:
-        error_messages.append('No file selected.')
-    else:
-        if not allowed_extension(filename):
-            error_messages.append('Invalid file extension. Valid extensions are: ' +
-                                  ', '.join(app.config['ALLOWED_EXTENSIONS']))
-        if not allowed_filename_len(filename):
-            error_messages.append(
-                f"Filename is too long. Maximum filename length is {str(app.config['MAX_FILENAME_LEN'])}")
-
-        if not column:
-            error_messages.append('No column number specified.')
-        elif not is_str_an_positive_int(column):
-            error_messages.append(
-                'Column number should be an integer equal or greater than 1.')
-
-        if not delimiter:
-            error_messages.append('No delimiter specified.')
-
-        if not is_header:
-            error_messages.append('No header information provided.')
-
-    if not error_messages:
-        is_form_ok = True
-    else:
-        for em in error_messages:
-            flash(em)
-
-    return is_form_ok
-
-
-def parse_upload_file_html_form(column: str,
-                                delimiter: str,
-                                is_header: bool) -> Tuple[int, str, bool]:
-    """
-    Parse the fields of 'Upload File' HTML form.
-
-    Parse column, delimiter and is_header:
-    - convert column to int and change convention from 1-based to 0-based
-    - get delimiter from dictionary
-    - convert is header to bool
-     """
-    column: int = int(column) - 1
-    delimiter: str = app.config['ALLOWED_DELIMITERS'][delimiter]
-    is_header: bool = True if is_header == 'yes' else False
-
-    return column, delimiter, is_header
 
 
 def save_current_user_file(file: FileStorage,
@@ -115,30 +23,6 @@ def save_current_user_file(file: FileStorage,
     file.save(file_path)
 
     return file_id
-
-
-def is_column_in_range(file: FileStorage, column: int, delimiter: str, is_header: bool) -> bool:
-    """
-    Check if number of column specified by a user is not exceeding the number of columns in the header or
-    in the first line of the file. Generate errors if it does.
-    """
-
-    column_in_range: bool = False
-    first_line_len: int = len(
-        file.stream.readline().decode().strip().split(delimiter))
-    file.stream.seek(0)
-
-    if column < first_line_len:
-        column_in_range = True
-    else:
-        if is_header:
-            flash(f'Provided column number exceeds the number of columns defined in the header: '
-                  f'{str(first_line_len)}.')
-        else:
-            flash(f'Provided column number exceeds the number of columns found in the first row of file:'
-                  f' {str(first_line_len)}.')
-
-    return column_in_range
 
 
 def parse_user_submitted_file(file_id: uuid,

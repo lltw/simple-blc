@@ -34,10 +34,10 @@ def create_app():
         SECRET_KEY='dev',
         UPLOAD_DIR=('/var/www/uploads/'),
         ALLOWED_EXTENSIONS={'tsv', 'csv', 'txt', 'tab'},
-        MAX_FILENAME_LEN=200,
+        MAX_FILENAME_LEN=255,
         ALLOWED_DELIMITERS={'comma': '\x2C', 'semicolon': '\x3B',
                             'colon': '\x3A', 'tab': '\x09', 'space': '\x20'},
-        MAX_CONTENT_LENGTH=10 * 1024 * 1024,  # set maximum upload file size to 1MB
+        MAX_CONTENT_LENGTH=1024 * 1024 * 1,  # set maximum upload file size to 1MB
         ALLOWED_MIN_NO_RECORDS=100,
         ALLOWED_MAX_FRAC_MALFORMED_RECORDS=0.1,
     )

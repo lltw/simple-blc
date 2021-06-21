@@ -13,13 +13,13 @@
 
       <div class="col-sm-12 col-xl-4 gy-4">
         <div class="p-3 border bg-light">
-          <UserFileUpload2 />
+          <UserFileUpload @file-uploaded="onFileUploaded" />
         </div>
       </div>
 
       <div class="col-sm-12 col-xl-8 gy-4">
         <div class="p-3 border bg-light ">
-          <ResultsChiSquaredTest />
+          <ResultsChiSquaredTest :fileID="fileID" />
         </div>
 
         <div>
@@ -27,7 +27,7 @@
         </div>
 
         <div class="p-3 border bg-light ">
-          <ResultsPlotTest />
+          <ResultsPlot :fileID="fileID" />
         </div>
       </div>
 
@@ -37,16 +37,26 @@
 </template>
 
 <script>
-import UserFileUpload2 from './components/UserFileUpload2.vue';
+import UserFileUpload from './components/UserFileUpload.vue';
 import ResultsChiSquaredTest from './components/ResultsChiSquaredTest.vue';
-import ResultsPlotTest from './components/ResultsPlotTest.vue';
+import ResultsPlot from './components/ResultsPlot.vue';
 
 export default {
   name: 'App',
   components: {
-    UserFileUpload2,
+    UserFileUpload,
     ResultsChiSquaredTest,
-    ResultsPlotTest
+    ResultsPlot
+  },
+  data() {
+    return {
+      fileID: ''
+    };
+  },
+  methods: {
+    onFileUploaded(fileID) {
+      this.fileID = fileID;
+    }
   }
 };
 </script>

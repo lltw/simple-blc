@@ -1,20 +1,23 @@
-import os
+import re
 import sys
 import uuid
 
-from flask import flash, render_template, jsonify, send_file, send_from_directory, make_response, request, redirect, url_for, Blueprint
-import mongoengine
+from flask import render_template, jsonify, send_file, request, Blueprint, abort
+
 from werkzeug.utils import secure_filename
 from flask import current_app as app
-from werkzeug.wrappers import response
 
-from simple_benfords_law_checker.parser import (is_upload_file_html_form_ok,
-                                                parse_upload_file_html_form,
-                                                is_column_in_range,
-                                                save_current_user_file,
+from simple_benfords_law_checker.validate_upload import (is_upload_request_complete,
+                                                         validate_filename,
+                                                         validate_and_parse_file_metadata,
+                                                         is_column_in_range)
+
+from simple_benfords_law_checker.parser import (save_current_user_file,
                                                 parse_user_submitted_file)
 
 from simple_benfords_law_checker.models import CurrentUserFile
+
+from simple_benfords_law_checker.benfords_stats import chisquare_gof_benfords_law_test
 
 
 # Blueprint Configuration
@@ -26,53 +29,46 @@ api_bp = Blueprint(
 )
 
 
-@app.route('/')
-def index():
-    return render_template('index.html')
-
-
-@app.route('/', methods=['POST'])
+@app.route('/upload-file', methods=['POST'])
 def upload_file():
 
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
+    # Check, if request contains 'file', 'delimiter', 'isHeader' and 'columnNumber' data
+    if is_upload_request_complete(request):
 
-        if request.files:
-            file = request.files['file']
-            column = request.form['column']
-            delimiter = request.form['delimiter']
-            is_header = request.form['is_header']
+        file = request.files['file']
+        delimiter = request.form['delimiter']
+        is_header = request.form['isHeader']
+        column = request.form['columnNumber']
 
-            filename = secure_filename(file.filename)
+        # Sanitize and validate filename
+        filename = secure_filename(file.filename)
+        validate_filename(filename)
 
-            if is_upload_file_html_form_ok(file, filename, column, delimiter, is_header):
+        # Validate and try to parse metadata.
+        (column, delimiter, is_header) = validate_and_parse_file_metadata(
+            column, delimiter, is_header)
 
-                # Parse user 'Upload File' HTML form
-                column, delimiter, is_header = parse_upload_file_html_form(
-                    column, delimiter, is_header)
+        # Chech if column is in range
+        is_column_in_range(file, column, delimiter, is_header)
 
-                if is_column_in_range(file, column, delimiter, is_header):
+        # Generate id for user submitted file. Save user submitted file to UPLOAD_DIR/file_id/
+        file_id: uuid = save_current_user_file(file, filename)
 
-                    # Generate id for user submitted file. Save user submitted file to UPLOAD_DIR/file_id/
-                    file_id: uuid = save_current_user_file(file, filename)
+        # Parse user submitted file
+        current_user_file = parse_user_submitted_file(file_id,
+                                                      filename,
+                                                      column,
+                                                      delimiter,
+                                                      is_header)    # type: CurrentUserFile
 
-                    # Parse user submitted file
-                    current_user_file = parse_user_submitted_file(file_id,
-                                                                  filename,
-                                                                  column,
-                                                                  delimiter,
-                                                                  is_header)    # type: CurrentUserFile
+        # Save current_user_file to current_user_files database
+        current_user_file.save()
 
-                    # Save current_user_file to current_user_files database
-                    current_user_file.save()
+        response_object = {'status': 'success', 'fileID': str(file_id)}
 
-                    return redirect(url_for('show_results', file_id=file_id))
-
-            return render_template('index.html')
-
-    return render_template('index.html')
+        return jsonify(response_object)
+    else:
+        abort(500)
 
 
 @app.route('/<file_id>/result', methods=['GET', 'POST'])
@@ -105,6 +101,39 @@ def show_results(file_id: uuid):
                            chi_2_p_value=chi_2_p_value)
 
 
+@app.route('/chi-squared-results', methods=['GET'])
+def chi_squared_results():
+
+    file_id = request.args.get('fileID')
+
+    current_user_file = CurrentUserFile.get_by_file_id(file_id)
+    numbers = current_user_file.data_column
+
+    chi_2_statistic, chi_2_p_value = chisquare_gof_benfords_law_test(numbers)
+
+    response_object = {'status': 'succes'}
+    response_object['chiSquaredStatistic'] = chi_2_statistic
+    response_object['chiSquaredPvalue'] = chi_2_p_value
+
+    return jsonify(response_object)
+
+
+@app.route('/plot', methods=['GET'])
+def plot():
+
+    file_id = request.args.get('fileID')
+
+    from . import plotter
+    import os
+
+    fig = plotter.get_freq_dist_plot(file_id)
+
+    fig_path = os.path.join(app.config['UPLOAD_DIR'], str(file_id), 'plot.png')
+    fig.savefig(fig_path)
+
+    return send_file(fig_path, mimetype='image/jpg')
+
+
 @app.route('/db-test')
 def db_test():
     from . import user_submitted_data
@@ -131,64 +160,3 @@ def test_results_plot():
 
     filename = 'static/img/test-plot.png'
     return send_file(filename, mimetype='image/jpg')
-
-
-@app.route('/test-upload', methods=['GET', 'POST'])
-def test_upload():
-    response_object = {'status': 'success'}
-
-    if request.method == 'POST':
-
-        try:
-            print(request.files['file'], file=sys.stderr)
-        except KeyError as error:
-            print(error)
-
-        print(request.form['columnNumber'], file=sys.stderr)
-        print(request.form['delimiter'], file=sys.stderr)
-        print(request.form['isHeader'], file=sys.stderr)
-
-        return jsonify(response_object)
-
-  #  if 'file' not in request.files:
-
-    #    response_object = {'status': 'failure', 'request': str(request)}
-   #     return jsonify(response_object)
-
-    # if request.files:
-    #    file = request.files['file']
-    #    column = request.form['columnNumber']
-    #    delimiter = request.form['delimiter']
-    #    is_header = request.form['isHeader']
-   #
-    #    filename = secure_filename(file.filename)
-
-     #   response_object = {'status': 'success', 'columnNumber': column,
-      #                      'delimiter': delimiter,
-       #                     'isHeader': is_header,
-        #                    'filename': filename}
-
-        # return jsonify(response_object)
-
-        # Parse user 'Upload File' HTML form
-        # column, delimiter, is_header = parse_upload_file_html_form(
-        #    column, delimiter, is_header)
-
-        # if is_column_in_range(file, column, delimiter, is_header):
-
-        # Generate id for user submitted file. Save user submitted file to UPLOAD_DIR/file_id/
-        #file_id: uuid = save_current_user_file(file, filename)
-
-        # Parse user submitted file
-        # current_user_file = parse_user_submitted_file(file_id,
-        #                                              filename,
-        #                                              column,
-        #                                              delimiter,
-        #                                              is_header)    # type: CurrentUserFile
-
-        # Save current_user_file to current_user_files database
-        # current_user_file.save()
-
-        # return redirect(url_for('show_results', file_id=file_id))
-
-        # return render_template('index.html')

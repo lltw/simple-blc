@@ -34,6 +34,7 @@ def get_emp_freq_distribution(data):
 
 
 def get_freq_dist_plot(file_id: uuid) -> Figure:
+
     current_user_file = CurrentUserFile.get_by_file_id(file_id)
     data_column = current_user_file.data_column
 
@@ -49,8 +50,10 @@ def get_freq_dist_plot(file_id: uuid) -> Figure:
     fig = Figure()  # type: Figure
     ax = fig.subplots()  # type: axes.Axes
 
-    ax.bar(x - 0.15, BENFORD_FREQ_DIST, width, label='Distribution according to Benford\'s law ')
-    ax.bar(x + 0.15, data_emp_freq_dist, width, label='Distribution in data provided by a User')
+    ax.bar(x - 0.15, BENFORD_FREQ_DIST, width,
+           label='Distribution according to Benford\'s law ')
+    ax.bar(x + 0.15, data_emp_freq_dist, width,
+           label='Distribution in data provided by a User')
 
     ax.set_ylabel('Frequency')
     ax.set_title('Distribution of first significant digit')

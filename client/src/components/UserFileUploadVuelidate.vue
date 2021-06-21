@@ -12,20 +12,22 @@
         name="file"
         ref="file"
         accept=".txt, .csv, .tsv, .tab"
-        required
         @change="handleFileUpload"
       >
     </div>
 
     <div class="mb-2">
-      <label for="delimiter">Select one of accepted delimiters:</label>
+      <label
+        for="delimiter"
+        class="form-label"
+      >Select a delimiter:</label>
       <select
         name="delimiter"
         id="delimiter"
         class="form-select form-select-sm"
         aria-label=".form-select-sm example"
-        required
         v-model="delimiter"
+        required
       >
         <option
           selected
@@ -37,6 +39,9 @@
         <option value="tab">{Tab} (\t)</option>
         <option value="space">{space} ( )</option>
       </select>
+      <div class="invalid-feedback">
+        Please select a delimiter.
+      </div>
     </div>
 
     <div class="mb-2">
@@ -47,7 +52,6 @@
         id="is_header"
         class="form-select form-select-sm"
         aria-label=".form-select-sm example"
-        required
         v-model="isHeader"
       >
         <option
@@ -76,6 +80,7 @@
       <input
         type="submit"
         value="Submit"
+        @click="submitFile"
       >
     </div>
 
@@ -85,25 +90,28 @@
 
 <script>
 import useVuelidate from '@vuelidate/core';
-import { required, email } from '@vuelidate/validators';
+import { required } from '@vuelidate/validators';
 import axios from 'axios';
 
 export default {
   setup() {
-    return { v$: useVuelidate() };
+    return {
+      v$: useVuelidate()
+    };
   },
   data() {
     return {
       file: '',
-      columnNumber: null,
       delimiter: '',
+      columnNumber: null,
       isHeader: null
     };
   },
   validations() {
     return {
       file: { required }, //, fileSizevalidation, filenameLengthValidation },
-      columnNumbeR: { required },
+      delimiter: { required },
+      columnNumber: { required },
       isHeader: { required }
     };
   },
@@ -111,7 +119,18 @@ export default {
     handleFileUpload() {
       this.file = this.$refs.file.files[0];
     },
+    validate() {
+      //console.log(this.v$);
+      //if (!this.v$.$error) {
+      //  // if ANY fail validation
+      //  console.log('validation ok');
+      //} else {
+      //  console.log('validation not ok');
+      //
+    },
     submitFile() {
+      this.v$.$validate(); // checks all inputs
+
       const uploadPath = 'http://localhost:5000/test-upload';
 
       let formData = new FormData();
