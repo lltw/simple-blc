@@ -16,14 +16,24 @@ To run the app you need to:
 2. checkout to this branch
 3. run the following commands from the top directory of cloned repository:
 
-```
-docker-compose up -d
-docker-compode logs -f
-cd client
-npm run serve
-```
+   ```
+   docker-compose up -d
+   ```
 
-4. open http://127.0.0.1:8080/ in your browser.
+   if you want to see logs, you can run:
+
+   ```
+   docker-compode logs -f
+   ```
+
+4. open new terminal and run:
+
+   ```
+   cd client
+   npm run serve
+   ```
+
+5. open http://127.0.0.1:8080/ in your browser.
 
 ## Examples
 
